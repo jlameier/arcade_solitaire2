@@ -3,7 +3,7 @@
 # Screen title and size
 SCREEN_WIDTH = 1024
 SCREEN_HEIGHT = 768
-SCREEN_TITLE = "Drag and Drop Cards"
+SCREEN_TITLE = "Solitaire"
 
 # Constants for sizing
 CARD_SCALE = 0.75

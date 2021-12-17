@@ -36,6 +36,13 @@ class MyGame(arcade.Window):
         # Create a list of lists, each holds a pile of cards.
         self.piles = None
 
+        # A Camera that can be used to draw GUI elements
+        self.gui_camera = None
+
+        # Keep track of the stock
+        self.stock = 0
+        self.redeals = 0
+
         arcade.set_background_color(arcade.color.AMAZON)
 
     def setup(self):
@@ -49,6 +56,13 @@ class MyGame(arcade.Window):
 
         # position of held cards
         self.held_cards_original_position = []
+
+        # Setup the GUI Camera
+        self.gui_camera = arcade.Camera(self.width, self.height)
+
+        # Keep track of the stock
+        self.stock = 0
+        self.redeals = 2
 
         # --- Create the mats the cards go on
 
@@ -139,6 +153,19 @@ class MyGame(arcade.Window):
         # Draw the cards
         self.card_list.draw()
 
+        # Activate the GUI camera before drawing GUI elements
+        self.gui_camera.use()
+
+        # Draw our stock on the screen, scrolling it with the viewport
+        stock_text = f"Stock left: {self.stock}, Redeals left: {self.redeals}"
+        arcade.draw_text(
+            stock_text,
+            10,
+            10,
+            arcade.csscolor.WHITE,
+            18,
+        )
+
     def pull_to_top(self, card: arcade.Sprite) -> None:
         """Pull card to top of rendering order (last to render, looks on-top)."""
 
@@ -188,6 +215,9 @@ class MyGame(arcade.Window):
 
             # Clicking on source deck? -> flip one
             if pile_index == const.TOP_FACE_DOWN_PILE:
+
+                # update stock
+                self.stock = len(self.piles[const.TOP_FACE_DOWN_PILE]) - 1
                 # Flip one
                 # If we run out of cards, stop
                 # TODO implement mechanik on flips
@@ -223,6 +253,30 @@ class MyGame(arcade.Window):
                     self.held_cards.append(card)
                     self.held_cards_original_position.append(card.position)
                     self.pull_to_top(card)
+
+        else:
+
+            # Click on a mat instead of a card?
+            mats = arcade.get_sprites_at_point((x, y), self.pile_mat_list)
+
+            if len(mats) > 0:
+                mat = mats[0]
+                mat_index = self.pile_mat_list.index(mat)
+
+                # Is it our turned over flip mat? and no cards on it?
+                if (
+                    mat_index == const.TOP_FACE_DOWN_PILE
+                    and len(self.piles[const.TOP_FACE_DOWN_PILE]) == 0
+                ):
+                    # Flip the deck back over so we can restart
+                    temp_list = self.piles[const.TOP_FACE_UP_PILE].copy()
+                    for card in reversed(temp_list):
+                        card.face_down()
+                        self.piles[const.TOP_FACE_UP_PILE].remove(card)
+                        self.piles[const.TOP_FACE_DOWN_PILE].append(card)
+                        card.position = self.pile_mat_list[
+                            const.TOP_FACE_DOWN_PILE
+                        ].position
 
     def on_mouse_motion(self, x: float, y: float, dx: float, dy: float):
         """User moves mouse"""
