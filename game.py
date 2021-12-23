@@ -8,6 +8,8 @@ from pyglet.window.key import Q
 import const
 from card import Card
 import random
+from pynput.mouse import Button, Controller
+import numpy as np
 
 
 class MyGame(arcade.Window):
@@ -196,6 +198,9 @@ class MyGame(arcade.Window):
         if symbol == arcade.key.R:
             # Restart
             self.setup()
+        if symbol == arcade.key.A:
+            # run Agent
+            self.smart_agent()
 
     def on_mouse_press(self, x: float, y: float, button: int, key_modifiers: int):
         """Called when the user presses a mouse button."""
@@ -359,11 +364,34 @@ class MyGame(arcade.Window):
         # We are no longer holding cards
         self.held_cards = []
 
+    def move_card(self, startpos, endpos, mouse):
+        mouse = mouse
+        correction = 70, -100
+        mouse.position = tuple(np.add(startpos, correction))
+        mouse.press(Button.left)
+        mouse.position = tuple(np.add(endpos, correction))
+        mouse.release(Button.left)
+
+    def smart_agent(self):
+        """So here is is some smart guy, that will be cloned and we'll see
+        Should be able to use on_mouse_press, on_mouse_motion and on_mouse_release
+        """
+        mouse = Controller()
+
+        startpos = self.pile_mat_list[const.PLAY_PILE_1].position
+        endpos = self.pile_mat_list[const.PLAY_PILE_3].position
+
+        self.move_card(startpos, endpos, mouse)
+
+
+# Todo figure out how to either validate moves or determin which moves are legal
+
 
 def main():
     """Main function"""
     window = MyGame()
     window.setup()
+    window.set_location(0, 0)
     arcade.run()
 
 
